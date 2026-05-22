@@ -53,12 +53,12 @@ export function DashboardPreview() {
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="rounded-md border border-white/8 px-3 py-2.5">
                   <p className="text-[11px] text-slate-500">Current plan</p>
-                  <p className="text-sm font-medium text-white">Home Plus</p>
-                  <p className="text-[11px] text-slate-400">300 Mbps</p>
+                  <p className="text-sm font-medium text-white">Home Stream</p>
+                  <p className="text-[11px] text-slate-400">100 Mbps</p>
                 </div>
                 <div className="rounded-md border border-white/8 px-3 py-2.5">
                   <p className="text-[11px] text-slate-500">Bill due</p>
-                  <p className="text-sm font-medium text-white">₹799</p>
+                  <p className="text-sm font-medium text-white">₹599</p>
                   <p className="text-[11px] text-slate-400">28 May 2026</p>
                 </div>
               </div>

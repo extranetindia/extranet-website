@@ -11,16 +11,16 @@ export const customer = {
 export const connection = {
   status: "Online" as const,
   uptime: "99.8%",
-  downloadMbps: 287,
+  downloadMbps: 98,
   uploadMbps: 142,
   latencyMs: 4,
   lastChecked: "2 min ago",
 } as const;
 
 export const activePlan = {
-  name: "Home Plus",
-  speed: "300 Mbps",
-  price: 799,
+  name: "Home Stream",
+  speed: "100 Mbps",
+  price: 599,
   billingCycle: "Monthly",
   startDate: "28 Apr 2025",
   expiryDate: "28 May 2026",
@@ -54,35 +54,35 @@ export const payments = [
   {
     id: "INV-2026-0512",
     date: "28 Apr 2026",
-    amount: 799,
+    amount: 599,
     status: "Paid" as const,
     method: "UPI",
   },
   {
     id: "INV-2026-0412",
     date: "28 Mar 2026",
-    amount: 799,
+    amount: 599,
     status: "Paid" as const,
     method: "Auto-debit",
   },
   {
     id: "INV-2026-0312",
     date: "28 Feb 2026",
-    amount: 799,
+    amount: 599,
     status: "Paid" as const,
     method: "Credit card",
   },
   {
     id: "INV-2026-0212",
     date: "28 Jan 2026",
-    amount: 799,
+    amount: 599,
     status: "Paid" as const,
     method: "UPI",
   },
   {
     id: "INV-2026-0112",
     date: "28 Dec 2025",
-    amount: 799,
+    amount: 599,
     status: "Paid" as const,
     method: "Net banking",
   },
@@ -92,7 +92,7 @@ export const notifications = [
   {
     id: "1",
     title: "Bill due in 6 days",
-    message: "Your Home Plus plan renews on 28 May 2026. Pay early to avoid interruption.",
+    message: "Your Home Stream plan renews on 28 May 2026. Pay early to avoid interruption.",
     time: "2 hours ago",
     type: "billing" as const,
     unread: true,
@@ -100,7 +100,7 @@ export const notifications = [
   {
     id: "2",
     title: "Speed test completed",
-    message: "Download 287 Mbps · Upload 142 Mbps. Connection is healthy.",
+    message: "Download 98 Mbps · Upload 48 Mbps. Connection is healthy.",
     time: "Yesterday",
     type: "info" as const,
     unread: true,
@@ -108,7 +108,7 @@ export const notifications = [
   {
     id: "3",
     title: "Auto-renewal enabled",
-    message: "₹799 will be debited via UPI on your renewal date.",
+    message: "₹599 will be debited via UPI on your renewal date.",
     time: "3 days ago",
     type: "info" as const,
     unread: false,
@@ -132,24 +132,9 @@ export const wifi = {
 } as const;
 
 export const portalPlans = [
-  {
-    name: "Home Basic",
-    speed: "100 Mbps",
-    price: 499,
-    current: false,
-  },
-  {
-    name: "Home Plus",
-    speed: "300 Mbps",
-    price: 799,
-    current: true,
-  },
-  {
-    name: "Home Max",
-    speed: "1 Gbps",
-    price: 1299,
-    current: false,
-  },
+  { name: "Home Starter", speed: "50 Mbps", price: 399, current: false },
+  { name: "Home Stream", speed: "100 Mbps", price: 599, current: true },
+  { name: "Home Max", speed: "200 Mbps", price: 899, current: false },
 ] as const;
 
 export const supportTickets = [

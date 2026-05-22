@@ -50,3 +50,27 @@ body {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out both;
 }
+
+@keyframes success-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.payment-success-ring::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 2px solid #0b4da2;
+  animation: success-ring 1.5s ease-out 0.2s 2;
+}

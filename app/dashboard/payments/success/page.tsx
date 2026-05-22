@@ -1,10 +1,10 @@
 import { PageShell } from "@/components/dashboard/PageShell";
-import { PaymentSuccessView } from "@/components/dashboard/payments/PaymentSuccessView";
+import { PaymentActivationSuccess } from "@/components/payments/PaymentActivationSuccess";
 
 export default function PaymentSuccessPage() {
   return (
-    <PageShell title="Payment confirmation">
-      <PaymentSuccessView />
+    <PageShell title="Activation complete">
+      <PaymentActivationSuccess />
     </PageShell>
   );
 }

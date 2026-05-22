@@ -47,7 +47,7 @@ export function Hero() {
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2.5">
               {[
-                { label: "Download", value: "300 Mbps" },
+                { label: "Download", value: "100 Mbps" },
                 { label: "Upload", value: "150 Mbps" },
                 { label: "Latency", value: "4 ms" },
                 { label: "Status", value: "Online", accent: true },

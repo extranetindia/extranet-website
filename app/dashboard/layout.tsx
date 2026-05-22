@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PaymentProvider } from "@/lib/payment-context";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardMobileHeader } from "@/components/dashboard/DashboardMobileHeader";
 import { DashboardBottomNav } from "@/components/dashboard/DashboardBottomNav";
@@ -14,13 +15,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-surface">
-      <DashboardSidebar />
-      <div className="lg:pl-56">
-        <DashboardMobileHeader />
-        <main className="min-h-screen pb-20 lg:pb-0">{children}</main>
+    <PaymentProvider>
+      <div className="min-h-screen bg-surface">
+        <DashboardSidebar />
+        <div className="lg:pl-56">
+          <DashboardMobileHeader />
+          <main className="min-h-screen pb-20 lg:pb-0">{children}</main>
+        </div>
+        <DashboardBottomNav />
       </div>
-      <DashboardBottomNav />
-    </div>
+    </PaymentProvider>
   );
 }

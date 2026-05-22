@@ -1,6 +1,11 @@
-import { activePlan, connection } from "@/lib/dashboard-data";
+"use client";
+
+import { connection } from "@/lib/dashboard-data";
+import { usePayment } from "@/lib/payment-context";
 
 export function StatusCards() {
+  const { subscription } = usePayment();
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <article className="rounded-lg border border-border bg-white p-4">
@@ -12,28 +17,30 @@ export function StatusCards() {
           <p className="text-sm font-semibold text-foreground">{connection.status}</p>
         </div>
         <p className="mt-2 text-[12px] text-muted">Uptime {connection.uptime}</p>
-        <p className="text-[11px] text-muted">Checked {connection.lastChecked}</p>
       </article>
 
       <article className="rounded-lg border border-border bg-white p-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
           Active plan
         </p>
-        <p className="mt-2 text-sm font-semibold text-foreground">{activePlan.name}</p>
-        <p className="text-[13px] font-medium text-telecom">{activePlan.speed}</p>
-        <p className="mt-2 text-[12px] text-muted">₹{activePlan.price}/{activePlan.billingCycle.toLowerCase()}</p>
+        <p className="mt-2 text-sm font-semibold text-foreground">
+          {subscription.planName}
+        </p>
+        <p className="text-[13px] font-medium text-telecom">{subscription.speed}</p>
+        <p className="mt-2 text-[12px] text-muted">
+          ₹{subscription.price.toLocaleString("en-IN")} / {subscription.billingPeriod}
+        </p>
       </article>
 
       <article className="rounded-lg border border-border bg-white p-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
           Expiry date
         </p>
-        <p className="mt-2 text-sm font-semibold text-foreground">{activePlan.expiryDate}</p>
-        <p className="mt-1 text-[13px] font-medium text-accent">
-          {activePlan.daysRemaining} days left
+        <p className="mt-2 text-sm font-semibold text-foreground">
+          {subscription.expiryDate}
         </p>
-        <p className="mt-2 text-[12px] text-muted">
-          Auto-renew {activePlan.autoRenew ? "on" : "off"}
+        <p className="mt-1 text-[13px] font-medium text-accent">
+          {subscription.daysRemaining} days left
         </p>
       </article>
 
@@ -44,8 +51,9 @@ export function StatusCards() {
         <p className="mt-2 text-sm font-semibold text-foreground">
           {connection.downloadMbps} Mbps
         </p>
-        <p className="text-[12px] text-muted">↓ Download · ↑ {connection.uploadMbps} Mbps</p>
-        <p className="mt-2 text-[12px] text-muted">Latency {connection.latencyMs} ms</p>
+        <p className="text-[12px] text-muted">
+          ↓ Down · ↑ {connection.uploadMbps} Mbps
+        </p>
       </article>
     </div>
   );

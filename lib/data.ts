@@ -11,52 +11,8 @@ export const navLinks = [
   { label: "Support", href: "#support" },
 ] as const;
 
-export const plans = [
-  {
-    name: "Home Basic",
-    speed: "100 Mbps",
-    price: "499",
-    period: "/month",
-    description: "Browsing, HD streaming, and video calls for everyday use.",
-    features: [
-      "Unlimited fair usage",
-      "Dual-band WiFi router",
-      "Standard installation",
-      "Email & chat support",
-    ],
-    popular: false,
-  },
-  {
-    name: "Home Plus",
-    speed: "300 Mbps",
-    price: "799",
-    period: "/month",
-    description: "For families, work-from-home, and multiple 4K streams.",
-    features: [
-      "Unlimited fair usage",
-      "WiFi 6 router included",
-      "Priority fault resolution",
-      "Usage & billing portal",
-      "Auto-pay discount",
-    ],
-    popular: true,
-  },
-  {
-    name: "Home Max",
-    speed: "1 Gbps",
-    price: "1,299",
-    period: "/month",
-    description: "Gigabit fiber for gaming, large households, and smart homes.",
-    features: [
-      "Unlimited fair usage",
-      "Mesh WiFi (2 nodes)",
-      "Dedicated support line",
-      "Static IP on request",
-      "Premium SLA",
-    ],
-    popular: false,
-  },
-] as const;
+/** @deprecated Use homePlans from @/lib/plans-data */
+export { homePlans as plans } from "@/lib/plans-data";
 
 export const features = [
   {
@@ -89,7 +45,7 @@ export const footerLinks = {
   company: [
     { label: "About Extranet", href: "#" },
     { label: "Coverage map", href: "#" },
-    { label: "Business plans", href: "#" },
+    { label: "Business plans", href: "#plans" },
   ],
   support: [
     { label: "Help centre", href: "#support" },

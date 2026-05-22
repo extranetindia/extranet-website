@@ -1,40 +1,29 @@
-import Link from "next/link";
-import { activePlan } from "@/lib/dashboard-data";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { DashboardCard } from "@/components/dashboard/DashboardCard";
-import { PaymentHistoryTable } from "@/components/dashboard/PaymentHistoryTable";
-import { Button } from "@/components/ui/Button";
+import { SubscriptionOverview } from "@/components/dashboard/SubscriptionOverview";
+import { PaymentHistoryInvoices } from "@/components/payments/PaymentHistoryInvoices";
+import Link from "next/link";
 
 export default function PaymentsPage() {
   return (
     <PageShell
       title="Payments"
-      description="View invoices, pay bills, and manage auto-renewal."
+      description="View invoices, renew your plan, and download payment receipts."
     >
-      <div className="rounded-lg border border-telecom/20 bg-telecom-light px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-5">
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            ₹{activePlan.price} due on {activePlan.expiryDate}
-          </p>
-          <p className="mt-0.5 text-[13px] text-muted">
-            {activePlan.name} · {activePlan.speed}
-          </p>
+      <SubscriptionOverview />
+
+      <div className="mt-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-foreground">Transaction history</h2>
+          <Link
+            href="/dashboard/payments/renew"
+            className="text-[12px] font-medium text-telecom hover:text-telecom-dark"
+          >
+            New renewal →
+          </Link>
         </div>
-        <Button href="/dashboard/payments/renew" variant="primary" className="mt-3 shrink-0 sm:mt-0">
-          Renew now
-        </Button>
+        <PaymentHistoryInvoices />
       </div>
 
-      <DashboardCard title="Payment history" className="mt-5">
-        <PaymentHistoryTable />
-      </DashboardCard>
-
-      <p className="mt-4 text-center text-[12px] text-muted">
-        Need a tax invoice?{" "}
-        <Link href="/dashboard/support" className="font-medium text-telecom hover:text-telecom-dark">
-          Contact billing support
-        </Link>
-      </p>
     </PageShell>
   );
 }

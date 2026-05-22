@@ -1,15 +1,13 @@
 import { PageShell } from "@/components/dashboard/PageShell";
-import { RenewForm } from "@/components/dashboard/payments/RenewForm";
+import { PlanSelection } from "@/components/payments/PlanSelection";
 
 export default function RenewPage() {
   return (
     <PageShell
-      title="Renew plan"
-      description="Complete payment to extend your Extranet broadband subscription."
+      title="Renew your plan"
+      description="Select a broadband plan and billing period to recharge your Extranet connection."
     >
-      <div className="mx-auto max-w-md">
-        <RenewForm />
-      </div>
+      <PlanSelection />
     </PageShell>
   );
 }
