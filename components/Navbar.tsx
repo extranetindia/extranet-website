@@ -31,7 +31,7 @@ export function Navbar() {
           </ul>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Button href="/dashboard" variant="ghost" className="px-3 py-2 text-[13px]">
+            <Button href="/login" variant="ghost" className="px-3 py-2 text-[13px]">
               Login
             </Button>
             <Button href="#plans" variant="primary" className="px-4 py-2 text-[13px]">
@@ -65,7 +65,7 @@ export function Navbar() {
                 </li>
               ))}
               <li className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-                <Button href="/dashboard" variant="outline" className="w-full">
+                <Button href="/login" variant="outline" className="w-full">
                   Login
                 </Button>
                 <Button href="#plans" variant="primary" className="w-full">

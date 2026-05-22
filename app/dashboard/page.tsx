@@ -1,9 +1,9 @@
 import { CustomerHeader } from "@/components/dashboard/CustomerHeader";
 import { StatusCards } from "@/components/dashboard/StatusCards";
-import { RenewPlanBanner } from "@/components/dashboard/RenewPlanBanner";
 import { DataUsageSection } from "@/components/dashboard/DataUsageSection";
-import { PaymentHistory } from "@/components/dashboard/PaymentHistory";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import { NotificationsSection } from "@/components/dashboard/NotificationsSection";
+import { PaymentHistory } from "@/components/dashboard/PaymentHistory";
 
 export default function DashboardPage() {
   return (
@@ -11,10 +11,10 @@ export default function DashboardPage() {
       <div className="space-y-5">
         <CustomerHeader />
         <StatusCards />
-        <RenewPlanBanner />
-        <DataUsageSection />
-        <PaymentHistory />
         <QuickActions />
+        <DataUsageSection />
+        <NotificationsSection />
+        <PaymentHistory />
       </div>
     </div>
   );

@@ -1,55 +1,30 @@
-import { wifi } from "@/lib/dashboard-data";
+import Link from "next/link";
+import { quickActions } from "@/lib/dashboard-data";
+import { ActionIcon } from "@/components/dashboard/DashboardIcons";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
-
-const actions = [
-  {
-    title: "Change WiFi password",
-    description: "Update your home network security credentials.",
-    buttonLabel: "Update password",
-  },
-  {
-    title: "Change WiFi name",
-    description: `Current SSID: ${wifi.ssid} (${wifi.band})`,
-    buttonLabel: "Rename network",
-  },
-  {
-    title: "Contact support",
-    description: "Raise a ticket or call our 24×7 helpline.",
-    buttonLabel: "Get help",
-  },
-] as const;
 
 export function QuickActions() {
   return (
-    <DashboardCard title="Quick actions" className="scroll-mt-20">
-      <div id="wifi" className="-mt-4 scroll-mt-20 sm:-mt-5" />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        {actions.map((action) => (
-          <div
-            key={action.title}
-            className="rounded-lg border border-border bg-surface p-4"
+    <DashboardCard title="Quick actions">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {quickActions.map((action) => (
+          <Link
+            key={action.id}
+            href={action.href}
+            className="flex gap-3 rounded-lg border border-border bg-surface p-3.5 transition-colors hover:border-telecom/30 hover:bg-telecom-light/50"
           >
-            <h4 className="text-[13px] font-semibold text-foreground">
-              {action.title}
-            </h4>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted">
-              {action.description}
-            </p>
-            <button
-              type="button"
-              className="mt-3 text-[13px] font-medium text-telecom hover:text-telecom-dark"
-            >
-              {action.buttonLabel} →
-            </button>
-          </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-telecom">
+              <ActionIcon type={action.icon} className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-foreground">{action.title}</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
+                {action.description}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
-
-      <p className="mt-4 text-[12px] text-muted">
-        {wifi.devicesConnected} devices connected · Changes may take up to 2
-        minutes to apply.
-      </p>
     </DashboardCard>
   );
 }

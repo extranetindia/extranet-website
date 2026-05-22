@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { brand } from "@/lib/data";
-import { dashboardNav } from "@/lib/dashboard-data";
+import { portalNav } from "@/lib/dashboard-data";
 import { Logo } from "@/components/Logo";
-import { DashboardNavIcon } from "@/components/dashboard/DashboardIcons";
+import { NavLink } from "@/components/dashboard/NavLink";
 
 export function DashboardSidebar() {
   return (
@@ -11,24 +11,29 @@ export function DashboardSidebar() {
         <Logo href="/" />
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
-        {dashboardNav.map((item) => (
-          <Link
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+        {portalNav.map((item) => (
+          <NavLink
             key={item.id}
             href={item.href}
-            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium text-muted transition-colors hover:bg-surface hover:text-telecom"
-          >
-            <DashboardNavIcon type={item.icon} className="h-5 w-5 shrink-0" />
-            {item.label}
-          </Link>
+            label={item.label}
+            icon={item.icon}
+            exact={item.id === "dashboard"}
+          />
         ))}
       </nav>
 
       <div className="border-t border-border p-4">
         <p className="text-[11px] text-muted">{brand.portal}</p>
         <Link
+          href="/login"
+          className="mt-2 block text-[13px] font-medium text-muted hover:text-foreground"
+        >
+          Sign out
+        </Link>
+        <Link
           href="/"
-          className="mt-2 block text-[13px] font-medium text-telecom hover:text-telecom-dark"
+          className="mt-1 block text-[13px] font-medium text-telecom hover:text-telecom-dark"
         >
           ← Back to website
         </Link>

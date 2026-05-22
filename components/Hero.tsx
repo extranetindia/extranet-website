@@ -31,7 +31,7 @@ export function Hero() {
               <Button href="#plans" variant="primary">
                 Check plans
               </Button>
-              <Button href="/dashboard" variant="outline-light">
+              <Button href="/login" variant="outline-light">
                 Customer login
               </Button>
             </div>

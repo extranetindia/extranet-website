@@ -14,7 +14,7 @@ export function LoginSection() {
             account.
           </p>
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
-            <Button href="/dashboard" variant="primary">
+            <Button href="/login" variant="primary">
               Login to portal
             </Button>
             <Button href="#plans" variant="outline">
