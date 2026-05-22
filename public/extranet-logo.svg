@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 36" fill="none" role="img" aria-label="Extranet">
+  <g>
+    <rect x="4" y="8" width="3" height="24" rx="1" fill="#0B4DA2"/>
+    <rect x="9" y="13" width="2.5" height="19" rx="0.5" fill="#0B4DA2"/>
+    <rect x="13.5" y="17" width="2.5" height="15" rx="0.5" fill="#0B4DA2"/>
+    <rect x="18" y="21" width="2.5" height="11" rx="0.5" fill="#0B4DA2"/>
+    <rect x="22.5" y="25" width="2.5" height="7" rx="0.5" fill="#0B4DA2"/>
+    <circle cx="14" cy="7" r="3" fill="#C62828"/>
+    <path d="M14 4v6M11 7h6" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  <text x="36" y="25" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" font-weight="700" letter-spacing="-0.02em" fill="#0B4DA2">Extranet</text>
+</svg>

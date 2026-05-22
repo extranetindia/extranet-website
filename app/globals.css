@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a2332;
+  --telecom-blue: #0b4da2;
+  --telecom-blue-dark: #083a7d;
+  --telecom-blue-darker: #062d61;
+  --telecom-blue-light: #e8f1fa;
+  --accent-red: #c62828;
+  --muted: #5c6b7a;
+  --border: #e2e8f0;
+  --surface: #f5f7fa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-telecom: var(--telecom-blue);
+  --color-telecom-dark: var(--telecom-blue-dark);
+  --color-telecom-darker: var(--telecom-blue-darker);
+  --color-telecom-light: var(--telecom-blue-light);
+  --color-accent: var(--accent-red);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --font-sans: var(--font-inter);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
