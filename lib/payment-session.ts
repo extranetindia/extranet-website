@@ -1,9 +1,10 @@
-import type { BillingPeriod } from "@/lib/renewal-plans";
+import type { BillingCycle } from "@/lib/domain/subscription";
 
 export type ProcessingCheckout = {
   planId: string;
-  billingPeriod: BillingPeriod;
+  billingPeriod: BillingCycle;
   methodId: string;
+  amount: number;
 };
 
 export const PROCESSING_SESSION_KEY = "extranet-processing-checkout";
@@ -17,7 +18,7 @@ export type PaymentResult = {
   amount: number;
   planName: string;
   speed: string;
-  billingPeriod: BillingPeriod;
+  billingPeriod: BillingCycle;
   newExpiryDate: string;
   method: string;
 };
@@ -44,6 +45,20 @@ export function clearProcessingSession(): void {
   sessionStorage.removeItem(PROCESSING_FAIL_KEY);
 }
 
+export function setSimulateFailFlag(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  if (enabled) {
+    sessionStorage.setItem(PROCESSING_FAIL_KEY, "1");
+  } else {
+    sessionStorage.removeItem(PROCESSING_FAIL_KEY);
+  }
+}
+
+export function shouldSimulateFail(): boolean {
+  if (typeof window === "undefined") return false;
+  return sessionStorage.getItem(PROCESSING_FAIL_KEY) === "1";
+}
+
 export function savePaymentResult(result: PaymentResult): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(PAYMENT_RESULT_KEY, JSON.stringify(result));
@@ -63,18 +78,4 @@ export function loadPaymentResult(): PaymentResult | null {
 export function clearPaymentResult(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(PAYMENT_RESULT_KEY);
-}
-
-export function setSimulateFailFlag(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  if (enabled) {
-    sessionStorage.setItem(PROCESSING_FAIL_KEY, "1");
-  } else {
-    sessionStorage.removeItem(PROCESSING_FAIL_KEY);
-  }
-}
-
-export function shouldSimulateFail(): boolean {
-  if (typeof window === "undefined") return false;
-  return sessionStorage.getItem(PROCESSING_FAIL_KEY) === "1";
 }

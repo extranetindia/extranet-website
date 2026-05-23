@@ -74,3 +74,8 @@ body {
   border: 2px solid #0b4da2;
   animation: success-ring 1.5s ease-out 0.2s 2;
 }
+
+/* Admin operations console */
+.admin-console main {
+  font-feature-settings: "tnum" 1;
+}

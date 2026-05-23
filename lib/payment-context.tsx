@@ -9,45 +9,32 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { payments as defaultPayments } from "@/lib/dashboard-data";
+import type { BillingRecord, PaymentStatus } from "@/lib/domain/billing";
+import type { BillingCycle, CustomerSubscription } from "@/lib/domain/subscription";
+import { addMonthsToDate, formatToday } from "@/lib/billing/pricing-utils";
+import { getCurrentCustomerBillingRecords } from "@/lib/billing/billing-service";
 import {
-  getPlanById,
-  getPlanPrice,
-  type BillingPeriod,
-  type RenewalPlan,
-} from "@/lib/renewal-plans";
+  calculateRenewalAmount,
+  daysUntilExpiry,
+  getCurrentCustomerSubscription,
+  getRenewalQuote,
+} from "@/lib/subscriptions/subscription-service";
+import { resolveCatalogPlanById } from "@/lib/catalog/catalog-service";
 
-export type PaymentStatus = "Paid" | "Failed" | "Pending";
+export type { PaymentStatus };
 
-export type Transaction = {
-  id: string;
-  txnId: string;
-  invoiceId: string;
-  date: string;
-  amount: number;
-  status: PaymentStatus;
-  method: string;
-  planName: string;
-  speed: string;
-  billingPeriod: BillingPeriod;
-};
+export type Transaction = BillingRecord & { status: PaymentStatus };
 
-export type SubscriptionState = {
-  planId: string;
-  planName: string;
-  speed: string;
-  price: number;
-  billingPeriod: BillingPeriod;
-  expiryDate: string;
+export type SubscriptionState = CustomerSubscription & {
   daysRemaining: number;
-  startDate: string;
-  autoRenew: boolean;
+  publicStartingPrice?: number;
 };
 
 type CheckoutDraft = {
-  planId: string;
-  billingPeriod: BillingPeriod;
+  billingPeriod: BillingCycle;
   methodId: string;
+  /** Snapshot of amount at checkout — customer-specific */
+  amount: number;
 };
 
 type PaymentState = {
@@ -58,30 +45,18 @@ type PaymentState = {
 
 const STORAGE_KEY = "extranet-payment-state";
 
-const DEFAULT_SUBSCRIPTION: SubscriptionState = {
-  planId: "home-stream",
-  planName: "Home Stream",
-  speed: "100 Mbps",
-  price: 599,
-  billingPeriod: "monthly",
-  expiryDate: "28 May 2026",
-  daysRemaining: 6,
-  startDate: "28 Apr 2025",
-  autoRenew: true,
-};
+function toSubscriptionState(sub: CustomerSubscription): SubscriptionState {
+  const catalog = resolveCatalogPlanById(sub.planCatalogId);
+  return {
+    ...sub,
+    daysRemaining: daysUntilExpiry(sub.expiryDate),
+    publicStartingPrice: catalog?.startingPrice,
+  };
+}
 
-const DEFAULT_TRANSACTIONS: Transaction[] = defaultPayments.map((p) => ({
-  id: p.id,
-  txnId: `TXN${p.id.replace("INV-", "")}`,
-  invoiceId: p.id,
-  date: p.date,
-  amount: p.amount,
-  status: p.status as PaymentStatus,
-  method: p.method,
-  planName: "Home Stream",
-  speed: "100 Mbps",
-  billingPeriod: "monthly" as BillingPeriod,
-}));
+function subscriptionToState(sub: CustomerSubscription): SubscriptionState {
+  return toSubscriptionState(sub);
+}
 
 function parseStoredState(raw: string | null): PaymentState | null {
   if (!raw) return null;
@@ -90,40 +65,6 @@ function parseStoredState(raw: string | null): PaymentState | null {
   } catch {
     return null;
   }
-}
-
-function addMonthsToDate(dateStr: string, months: number): string {
-  const months_map: Record<string, number> = {
-    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-  };
-  const parts = dateStr.split(" ");
-  const day = parseInt(parts[0], 10);
-  const month = months_map[parts[1]];
-  const year = parseInt(parts[2], 10);
-  const d = new Date(year, month + months, day);
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function daysUntil(dateStr: string): number {
-  const months_map: Record<string, number> = {
-    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-  };
-  const parts = dateStr.split(" ");
-  const day = parseInt(parts[0], 10);
-  const month = months_map[parts[1]];
-  const year = parseInt(parts[2], 10);
-  const target = new Date(year, month, day);
-  const now = new Date(2026, 4, 22);
-  return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-}
-
-function formatToday(): string {
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const now = new Date(2026, 4, 22);
-  return `${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
 }
 
 function generateTxnId(): string {
@@ -139,6 +80,7 @@ type PaymentContextValue = {
   transactions: Transaction[];
   checkout: CheckoutDraft | null;
   latestTransaction: Transaction | null;
+  renewalQuote: ReturnType<typeof getRenewalQuote>;
   setCheckout: (draft: CheckoutDraft) => void;
   clearCheckout: () => void;
   completePayment: (success: boolean) => {
@@ -149,30 +91,48 @@ type PaymentContextValue = {
     planName: string;
     speed: string;
   } | null;
-  getCheckoutPlan: () => RenewalPlan | undefined;
   getCheckoutAmount: () => number;
+  refreshSubscription: () => void;
 };
 
 const PaymentContext = createContext<PaymentContextValue | null>(null);
 
 export function PaymentProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PaymentState>({
-    subscription: DEFAULT_SUBSCRIPTION,
-    transactions: DEFAULT_TRANSACTIONS,
-    checkout: null,
-  });
+  const loadInitial = () => {
+    const sub = getCurrentCustomerSubscription();
+    const billing = getCurrentCustomerBillingRecords();
+    return {
+      subscription: subscriptionToState(sub),
+      transactions: billing as Transaction[],
+      checkout: null,
+    };
+  };
+
+  const [state, setState] = useState<PaymentState>(loadInitial);
   const [hydrated, setHydrated] = useState(false);
+
+  const refreshSubscription = useCallback(() => {
+    const sub = getCurrentCustomerSubscription();
+    setState((prev) => ({
+      ...prev,
+      subscription: subscriptionToState(sub),
+      transactions: getCurrentCustomerBillingRecords() as Transaction[],
+    }));
+  }, []);
 
   useEffect(() => {
     const stored = parseStoredState(localStorage.getItem(STORAGE_KEY));
-    if (stored) {
+    const freshSub = subscriptionToState(getCurrentCustomerSubscription());
+    if (stored?.subscription.customerId === freshSub.customerId) {
       setState({
         ...stored,
         subscription: {
           ...stored.subscription,
-          daysRemaining: daysUntil(stored.subscription.expiryDate),
+          daysRemaining: daysUntilExpiry(stored.subscription.expiryDate),
         },
       });
+    } else {
+      setState(loadInitial());
     }
     setHydrated(true);
   }, []);
@@ -182,6 +142,11 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state, hydrated]);
 
+  const renewalQuote = useMemo(
+    () => getRenewalQuote(state.subscription, state.subscription.billingCycle),
+    [state.subscription]
+  );
+
   const setCheckout = useCallback((draft: CheckoutDraft) => {
     setState((prev) => ({ ...prev, checkout: draft }));
   }, []);
@@ -190,16 +155,13 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, checkout: null }));
   }, []);
 
-  const getCheckoutPlan = useCallback(() => {
-    if (!state.checkout) return undefined;
-    return getPlanById(state.checkout.planId);
-  }, [state.checkout]);
-
   const getCheckoutAmount = useCallback(() => {
-    const plan = getCheckoutPlan();
-    if (!plan || !state.checkout) return 0;
-    return getPlanPrice(plan, state.checkout.billingPeriod);
-  }, [getCheckoutPlan, state.checkout]);
+    if (state.checkout) return state.checkout.amount;
+    return calculateRenewalAmount(
+      state.subscription,
+      state.subscription.billingCycle
+    );
+  }, [state.checkout, state.subscription]);
 
   const completePayment = useCallback((success: boolean) => {
     let result: {
@@ -215,10 +177,8 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       const checkout = prev.checkout;
       if (!checkout) return prev;
 
-      const plan = getPlanById(checkout.planId);
-      if (!plan) return prev;
-
-      const amount = getPlanPrice(plan, checkout.billingPeriod);
+      const sub = prev.subscription;
+      const amount = checkout.amount;
       const method =
         checkout.methodId === "upi"
           ? "UPI"
@@ -233,23 +193,24 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       if (!success) {
         const failedTxn: Transaction = {
           id: invoiceId,
+          customerId: sub.customerId,
           txnId,
           invoiceId,
           date: today,
           amount,
           status: "Failed",
           method,
-          planName: plan.name,
-          speed: plan.speed,
-          billingPeriod: checkout.billingPeriod,
+          planName: sub.planName,
+          speed: sub.speed,
+          billingCycle: checkout.billingPeriod,
         };
         result = {
           txnId,
-          newExpiry: prev.subscription.expiryDate,
+          newExpiry: sub.expiryDate,
           invoiceId,
           amount,
-          planName: plan.name,
-          speed: plan.speed,
+          planName: sub.planName,
+          speed: sub.speed,
         };
         return {
           ...prev,
@@ -258,19 +219,20 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       }
 
       const months = checkout.billingPeriod === "monthly" ? 1 : 3;
-      const newExpiry = addMonthsToDate(prev.subscription.expiryDate, months);
+      const newExpiry = addMonthsToDate(sub.expiryDate, months);
 
       const successTxn: Transaction = {
         id: invoiceId,
+        customerId: sub.customerId,
         txnId,
         invoiceId,
         date: today,
         amount,
         status: "Paid",
         method,
-        planName: plan.name,
-        speed: plan.speed,
-        billingPeriod: checkout.billingPeriod,
+        planName: sub.planName,
+        speed: sub.speed,
+        billingCycle: checkout.billingPeriod,
       };
 
       result = {
@@ -278,21 +240,20 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         newExpiry,
         invoiceId,
         amount,
-        planName: plan.name,
-        speed: plan.speed,
+        planName: sub.planName,
+        speed: sub.speed,
       };
+
+      const updatedSub: SubscriptionState = {
+        ...sub,
+        billingCycle: checkout.billingPeriod,
+        expiryDate: newExpiry,
+        daysRemaining: daysUntilExpiry(newExpiry),
+        startDate: today,
+      };
+
       return {
-        subscription: {
-          planId: plan.id,
-          planName: plan.name,
-          speed: plan.speed,
-          price: amount,
-          billingPeriod: checkout.billingPeriod,
-          expiryDate: newExpiry,
-          daysRemaining: daysUntil(newExpiry),
-          startDate: today,
-          autoRenew: prev.subscription.autoRenew,
-        },
+        subscription: updatedSub,
         transactions: [successTxn, ...prev.transactions],
         checkout: null,
       };
@@ -309,20 +270,22 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       transactions: state.transactions,
       checkout: state.checkout,
       latestTransaction,
+      renewalQuote,
       setCheckout,
       clearCheckout,
       completePayment,
-      getCheckoutPlan,
       getCheckoutAmount,
+      refreshSubscription,
     }),
     [
       state,
       latestTransaction,
+      renewalQuote,
       setCheckout,
       clearCheckout,
       completePayment,
-      getCheckoutPlan,
       getCheckoutAmount,
+      refreshSubscription,
     ]
   );
 

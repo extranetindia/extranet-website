@@ -1,21 +1,21 @@
 "use client";
 
-import type { BillingPeriod } from "@/lib/renewal-plans";
+import type { BillingCycle } from "@/lib/domain/subscription";
 
 type BillingPeriodToggleProps = {
-  value: BillingPeriod;
-  onChange: (period: BillingPeriod) => void;
+  value: BillingCycle;
+  onChange: (period: BillingCycle) => void;
 };
 
 export function BillingPeriodToggle({ value, onChange }: BillingPeriodToggleProps) {
   return (
-    <div className="inline-flex rounded-lg border border-border bg-surface p-1">
+    <div className="inline-flex rounded-lg border border-border bg-surface p-0.5">
       <button
         type="button"
         onClick={() => onChange("monthly")}
-        className={`rounded-md px-4 py-2 text-[13px] font-medium transition-colors ${
+        className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
           value === "monthly"
-            ? "bg-white text-telecom shadow-sm"
+            ? "bg-white text-foreground shadow-sm"
             : "text-muted hover:text-foreground"
         }`}
       >
@@ -24,14 +24,14 @@ export function BillingPeriodToggle({ value, onChange }: BillingPeriodToggleProp
       <button
         type="button"
         onClick={() => onChange("quarterly")}
-        className={`rounded-md px-4 py-2 text-[13px] font-medium transition-colors ${
+        className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
           value === "quarterly"
-            ? "bg-white text-telecom shadow-sm"
+            ? "bg-white text-foreground shadow-sm"
             : "text-muted hover:text-foreground"
         }`}
       >
         Quarterly
-        <span className="ml-1.5 text-[11px] text-emerald-600">Save more</span>
+        <span className="ml-1 text-[10px] text-emerald-600">Save 5%</span>
       </button>
     </div>
   );

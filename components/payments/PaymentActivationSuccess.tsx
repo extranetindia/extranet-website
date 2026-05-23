@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePayment } from "@/lib/payment-context";
 import { loadPaymentResult, type PaymentResult } from "@/lib/payment-session";
-import { getPeriodLabel, type BillingPeriod } from "@/lib/renewal-plans";
+import { getPeriodLabel } from "@/lib/billing/pricing-utils";
+import type { BillingCycle } from "@/lib/domain/subscription";
 import { Button } from "@/components/ui/Button";
 
 type DisplayDetails = {
@@ -13,7 +14,7 @@ type DisplayDetails = {
   amount: number;
   planName: string;
   speed: string;
-  billingPeriod: BillingPeriod;
+  billingPeriod: BillingCycle;
   expiryDate: string;
 };
 
@@ -34,7 +35,7 @@ export function PaymentActivationSuccess() {
       amount: latestTransaction.amount,
       planName: latestTransaction.planName,
       speed: latestTransaction.speed,
-      billingPeriod: latestTransaction.billingPeriod,
+      billingPeriod: latestTransaction.billingCycle,
       expiryDate: subscription.expiryDate,
     };
   } else if (storedResult?.success) {
@@ -86,7 +87,7 @@ export function PaymentActivationSuccess() {
           Internet activated successfully
         </h1>
         <p className="mt-2 text-[13px] text-muted">
-          Your Extranet broadband connection has been renewed and is now active.
+          Your Extranet broadband connection has been renewed at your account rate.
         </p>
       </div>
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePayment } from "@/lib/payment-context";
 import { Button } from "@/components/ui/Button";
 
@@ -21,6 +20,14 @@ export function SubscriptionOverview() {
             </span>
           )}
         </p>
+        <p className="mt-1 text-[13px] font-medium text-foreground">
+          Your renewal amount: ₹
+          {subscription.billingAmount.toLocaleString("en-IN")}
+          <span className="font-normal text-muted"> / month</span>
+        </p>
+        {subscription.billingNote && (
+          <p className="mt-1 text-[12px] text-muted">{subscription.billingNote}</p>
+        )}
         {latestTransaction?.status === "Paid" && (
           <p className="mt-1 text-[12px] text-muted">
             Last payment: ₹{latestTransaction.amount.toLocaleString("en-IN")} on{" "}
@@ -33,7 +40,7 @@ export function SubscriptionOverview() {
         variant="primary"
         className="mt-3 shrink-0 sm:mt-0"
       >
-        Renew plan
+        Renew at ₹{subscription.billingAmount.toLocaleString("en-IN")}
       </Button>
     </div>
   );

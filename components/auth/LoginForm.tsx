@@ -4,6 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import {
+  resolveCustomerIdFromPhone,
+  setLoggedInCustomerId,
+} from "@/lib/session/customer-session";
 
 export function LoginForm() {
   const router = useRouter();
@@ -18,6 +22,9 @@ export function LoginForm() {
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
+    const customerId = resolveCustomerIdFromPhone(mobile);
+    setLoggedInCustomerId(customerId);
+    localStorage.removeItem("extranet-payment-state");
     router.push("/dashboard");
   };
 
@@ -54,7 +61,8 @@ export function LoginForm() {
             />
           </div>
           <p className="mt-1.5 text-[12px] text-muted">
-            We will send a one-time password to verify your account.
+            Demo: <span className="font-medium">9876543210</span> → Rahul (₹499/mo) ·{" "}
+            <span className="font-medium">9123498765</span> → Amit (₹799/mo)
           </p>
         </div>
 

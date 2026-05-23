@@ -1,4 +1,8 @@
+"use client";
+
 import { brand } from "@/lib/data";
+import { getLowestStartingPrice } from "@/lib/catalog/catalog-service";
+import { useMarketing } from "@/lib/public/marketing-provider";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 
@@ -9,35 +13,65 @@ const stats = [
 ] as const;
 
 export function Hero() {
+  const { hero, catalog, synced } = useMarketing();
+  const lowest = getLowestStartingPrice(catalog);
+  const footnote =
+    synced && lowest != null
+      ? `Plans from ₹${lowest.toLocaleString("en-IN")}/month · Free standard installation in service areas`
+      : hero.footnote;
+
+  const bgStyle = hero.backgroundImageUrl
+    ? {
+        backgroundImage: `linear-gradient(90deg, rgba(6,45,97,0.92) 0%, rgba(10,31,51,0.85) 55%, rgba(10,31,51,0.75) 100%), url(${hero.backgroundImageUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : undefined;
+
   return (
-    <section id="home" className="border-b border-border bg-telecom-darker">
+    <section
+      id="home"
+      className="border-b border-border bg-telecom-darker"
+      style={bgStyle}
+    >
       <Container className="py-12 sm:py-14 lg:py-16">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
           <div className="max-w-md">
-            <p className="text-xs font-medium text-slate-400">
-              {brand.tagline} · Pan-India coverage
-            </p>
+            {hero.badgeText ? (
+              <p className="text-xs font-medium text-slate-400" suppressHydrationWarning>
+                {hero.badgeText}
+              </p>
+            ) : (
+              <p className="text-xs font-medium text-slate-400">
+                {brand.tagline} · Pan-India coverage
+              </p>
+            )}
 
-            <h1 className="mt-3 text-[1.625rem] font-semibold leading-snug tracking-tight text-white sm:text-[1.875rem]">
-              Reliable fiber internet for your home
+            <h1
+              className="mt-3 text-[1.625rem] font-semibold leading-snug tracking-tight text-white sm:text-[1.875rem]"
+              suppressHydrationWarning
+            >
+              {hero.title}
             </h1>
 
-            <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-[15px]">
-              Extranet delivers consistent speeds, transparent billing, and an
-              online portal to pay bills, track usage, and manage your connection.
+            <p
+              className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-[15px]"
+              suppressHydrationWarning
+            >
+              {hero.subtitle}
             </p>
 
             <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-              <Button href="#plans" variant="primary">
-                Check plans
+              <Button href={hero.ctaHref} variant="primary">
+                <span suppressHydrationWarning>{hero.ctaText}</span>
               </Button>
-              <Button href="/login" variant="outline-light">
-                Customer login
+              <Button href={hero.secondaryCtaHref} variant="outline-light">
+                <span suppressHydrationWarning>{hero.secondaryCtaText}</span>
               </Button>
             </div>
 
-            <p className="mt-4 text-xs text-slate-500">
-              Plans from ₹499/month · Free standard installation in service areas
+            <p className="mt-4 text-xs text-slate-500" suppressHydrationWarning>
+              {footnote}
             </p>
           </div>
 

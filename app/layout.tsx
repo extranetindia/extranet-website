@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { MarketingProvider } from "@/lib/public/marketing-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} scroll-smooth antialiased`}>
       <body className="min-h-screen bg-white font-sans text-foreground">
-        {children}
+        <MarketingProvider>{children}</MarketingProvider>
       </body>
     </html>
   );

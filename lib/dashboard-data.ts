@@ -1,12 +1,7 @@
-export const customer = {
-  name: "Rahul Sharma",
-  accountId: "EXT-2847193",
-  phone: "+91 98765 43210",
-  phoneRaw: "9876543210",
-  email: "rahul.sharma@email.com",
-  address: "Flat 402, Green Valley Apartments, Sector 62, Noida, UP 201301",
-  memberSince: "Mar 2023",
-} as const;
+/**
+ * Static portal UI data (connection metrics, usage, nav).
+ * Customer identity & billing amounts come from subscription/billing services.
+ */
 
 export const connection = {
   status: "Online" as const,
@@ -15,17 +10,6 @@ export const connection = {
   uploadMbps: 142,
   latencyMs: 4,
   lastChecked: "2 min ago",
-} as const;
-
-export const activePlan = {
-  name: "Home Stream",
-  speed: "100 Mbps",
-  price: 599,
-  billingCycle: "Monthly",
-  startDate: "28 Apr 2025",
-  expiryDate: "28 May 2026",
-  daysRemaining: 6,
-  autoRenew: true,
 } as const;
 
 export const monthlyUsage = {
@@ -50,79 +34,6 @@ export const monthlyUsage = {
   ],
 } as const;
 
-export const payments = [
-  {
-    id: "INV-2026-0512",
-    date: "28 Apr 2026",
-    amount: 599,
-    status: "Paid" as const,
-    method: "UPI",
-  },
-  {
-    id: "INV-2026-0412",
-    date: "28 Mar 2026",
-    amount: 599,
-    status: "Paid" as const,
-    method: "Auto-debit",
-  },
-  {
-    id: "INV-2026-0312",
-    date: "28 Feb 2026",
-    amount: 599,
-    status: "Paid" as const,
-    method: "Credit card",
-  },
-  {
-    id: "INV-2026-0212",
-    date: "28 Jan 2026",
-    amount: 599,
-    status: "Paid" as const,
-    method: "UPI",
-  },
-  {
-    id: "INV-2026-0112",
-    date: "28 Dec 2025",
-    amount: 599,
-    status: "Paid" as const,
-    method: "Net banking",
-  },
-] as const;
-
-export const notifications = [
-  {
-    id: "1",
-    title: "Bill due in 6 days",
-    message: "Your Home Stream plan renews on 28 May 2026. Pay early to avoid interruption.",
-    time: "2 hours ago",
-    type: "billing" as const,
-    unread: true,
-  },
-  {
-    id: "2",
-    title: "Speed test completed",
-    message: "Download 98 Mbps · Upload 48 Mbps. Connection is healthy.",
-    time: "Yesterday",
-    type: "info" as const,
-    unread: true,
-  },
-  {
-    id: "3",
-    title: "Auto-renewal enabled",
-    message: "₹599 will be debited via UPI on your renewal date.",
-    time: "3 days ago",
-    type: "info" as const,
-    unread: false,
-  },
-  {
-    id: "4",
-    title: "Maintenance completed",
-    message: "Scheduled work in Sector 62 finished. No action required.",
-    time: "1 week ago",
-    type: "success" as const,
-    unread: false,
-  },
-] as const;
-
 export const wifi = {
   ssid: "Extranet_Home_2847",
   band: "5 GHz",
@@ -130,12 +41,6 @@ export const wifi = {
   routerModel: "Extranet WiFi 6 Router",
   lastRestart: "12 Apr 2026",
 } as const;
-
-export const portalPlans = [
-  { name: "Home Starter", speed: "50 Mbps", price: 399, current: false },
-  { name: "Home Stream", speed: "100 Mbps", price: 599, current: true },
-  { name: "Home Max", speed: "200 Mbps", price: 899, current: false },
-] as const;
 
 export const supportTickets = [
   {
@@ -167,7 +72,7 @@ export const quickActions = [
   {
     id: "renew",
     title: "Renew plan",
-    description: "Extend your current plan before expiry.",
+    description: "Pay your account-specific renewal amount.",
     href: "/dashboard/payments/renew",
     icon: "renew",
   },

@@ -3,6 +3,10 @@
 import { connection } from "@/lib/dashboard-data";
 import { usePayment } from "@/lib/payment-context";
 
+function formatBillingCycle(cycle: string): string {
+  return cycle === "monthly" ? "month" : "quarter";
+}
+
 export function StatusCards() {
   const { subscription } = usePayment();
 
@@ -21,14 +25,15 @@ export function StatusCards() {
 
       <article className="rounded-lg border border-border bg-white p-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
-          Active plan
+          Your billing rate
         </p>
         <p className="mt-2 text-sm font-semibold text-foreground">
           {subscription.planName}
         </p>
         <p className="text-[13px] font-medium text-telecom">{subscription.speed}</p>
         <p className="mt-2 text-[12px] text-muted">
-          ₹{subscription.price.toLocaleString("en-IN")} / {subscription.billingPeriod}
+          ₹{subscription.billingAmount.toLocaleString("en-IN")} /{" "}
+          {formatBillingCycle(subscription.billingCycle)}
         </p>
       </article>
 

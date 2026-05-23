@@ -11,7 +11,6 @@ import {
   shouldSimulateFail,
   type ProcessingCheckout,
 } from "@/lib/payment-session";
-import { getPlanById, getPlanPrice } from "@/lib/renewal-plans";
 
 const STEPS = [
   "Verifying payment details",
@@ -29,7 +28,7 @@ type ProcessingStatus = "loading" | "steps" | "completing" | "redirecting";
 
 export function PaymentProcessing() {
   const router = useRouter();
-  const { checkout, setCheckout, completePayment } = usePayment();
+  const { subscription, checkout, setCheckout, completePayment } = usePayment();
 
   const [status, setStatus] = useState<ProcessingStatus>("loading");
   const [step, setStep] = useState(0);
@@ -39,9 +38,15 @@ export function PaymentProcessing() {
   const pipelineStarted = useRef(false);
   const redirected = useRef(false);
 
-  const activeDraft = checkout ?? sessionDraft;
-  const plan = activeDraft ? getPlanById(activeDraft.planId) : undefined;
-  const amount = plan && activeDraft ? getPlanPrice(plan, activeDraft.billingPeriod) : 0;
+  const activeDraft = sessionDraft ?? (checkout
+    ? {
+        planId: subscription.planCatalogId,
+        billingPeriod: checkout.billingPeriod,
+        methodId: checkout.methodId,
+        amount: checkout.amount,
+      }
+    : null);
+  const amount = activeDraft?.amount ?? 0;
 
   const redirectToResult = (simulateFail: boolean) => {
     if (redirected.current) return;
@@ -62,9 +67,6 @@ export function PaymentProcessing() {
 
   const finalizePayment = (simulateFail: boolean) => {
     if (!sessionDraft) return;
-
-    const planData = getPlanById(sessionDraft.planId);
-    if (!planData) return;
 
     const method =
       sessionDraft.methodId === "upi"
@@ -96,15 +98,27 @@ export function PaymentProcessing() {
 
   useEffect(() => {
     const saved = loadProcessingSession();
-    const draft = checkout ?? saved;
+    const draftFromCheckout = checkout
+      ? {
+          planId: subscription.planCatalogId,
+          billingPeriod: checkout.billingPeriod,
+          methodId: checkout.methodId,
+          amount: checkout.amount,
+        }
+      : null;
+    const draft = saved ?? draftFromCheckout;
 
     if (!draft) {
       setError(true);
       return;
     }
 
-    if (!checkout) {
-      setCheckout(draft);
+    if (!checkout && draftFromCheckout) {
+      setCheckout({
+        billingPeriod: draft.billingPeriod,
+        methodId: draft.methodId,
+        amount: draft.amount,
+      });
     }
     setSessionDraft(draft);
     setStatus("steps");
@@ -152,7 +166,6 @@ export function PaymentProcessing() {
       cancelled = true;
       timers.forEach((id) => clearTimeout(id));
     };
-    // Only start pipeline once when sessionDraft is ready — never re-run on status changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionDraft]);
 
@@ -238,11 +251,9 @@ export function PaymentProcessing() {
             ? "Payment confirmed"
             : "Processing payment"}
       </h1>
-      {plan && (
-        <p className="mt-1 text-[13px] text-muted">
-          {plan.name} · ₹{amount.toLocaleString("en-IN")}
-        </p>
-      )}
+      <p className="mt-1 text-[13px] text-muted">
+        {subscription.planName} · ₹{amount.toLocaleString("en-IN")}
+      </p>
 
       <ul className="mt-8 space-y-2 text-left">
         {STEPS.map((label, i) => {

@@ -1,15 +1,16 @@
+"use client";
+
 import { PricingCard } from "@/components/plans/PricingCard";
-import {
-  getPlansByCategory,
-  planCategoryMeta,
-  type PlanCategory,
-} from "@/lib/plans-data";
+import { planCategoryMeta } from "@/lib/catalog/plan-catalog";
+import { useMarketing } from "@/lib/public/marketing-provider";
+import type { PlanCategory } from "@/lib/domain/catalog";
 
 type PlansCategoryPanelProps = {
   category: PlanCategory;
 };
 
 export function PlansCategoryPanel({ category }: PlansCategoryPanelProps) {
+  const { getPlansByCategory } = useMarketing();
   const meta = planCategoryMeta[category];
   const plans = getPlansByCategory(category);
 
@@ -29,11 +30,19 @@ export function PlansCategoryPanel({ category }: PlansCategoryPanelProps) {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
-        {plans.map((plan) => (
-          <PricingCard key={plan.id} plan={plan} />
-        ))}
-      </div>
+      {plans.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border bg-white px-4 py-10 text-center">
+          <p className="text-[13px] text-muted">
+            No active plans in this category. Enable plans in the admin catalog.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+          {plans.map((plan) => (
+            <PricingCard key={plan.id} plan={plan} />
+          ))}
+        </div>
+      )}
 
       <p className="mt-6 text-center text-[12px] text-muted">{meta.footnote}</p>
 

@@ -1,7 +1,44 @@
-import { notifications } from "@/lib/dashboard-data";
+"use client";
+
+import { usePayment } from "@/lib/payment-context";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 
 export function NotificationsSection() {
+  const { subscription } = usePayment();
+
+  const notifications = [
+    {
+      id: "1",
+      title: "Bill due soon",
+      message: `Your ${subscription.planName} plan renews on ${subscription.expiryDate}. Your account renewal amount is ₹${subscription.billingAmount.toLocaleString("en-IN")}/month.`,
+      time: "2 hours ago",
+      unread: true,
+    },
+    {
+      id: "2",
+      title: "Speed test completed",
+      message: "Download 98 Mbps · Upload 48 Mbps. Connection is healthy.",
+      time: "Yesterday",
+      unread: true,
+    },
+    {
+      id: "3",
+      title: subscription.autoRenew ? "Auto-renewal enabled" : "Auto-renewal off",
+      message: subscription.autoRenew
+        ? `₹${subscription.billingAmount.toLocaleString("en-IN")} will be debited on your renewal date.`
+        : "Pay manually before expiry to avoid service interruption.",
+      time: "3 days ago",
+      unread: false,
+    },
+    {
+      id: "4",
+      title: "Maintenance completed",
+      message: "Scheduled work in your area finished. No action required.",
+      time: "1 week ago",
+      unread: false,
+    },
+  ];
+
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (

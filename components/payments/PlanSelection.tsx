@@ -2,79 +2,77 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { renewalPlans, type BillingPeriod } from "@/lib/renewal-plans";
 import { usePayment } from "@/lib/payment-context";
+import { calculateRenewalAmount } from "@/lib/subscriptions/subscription-service";
+import type { BillingCycle } from "@/lib/domain/subscription";
 import { saveProcessingSession } from "@/lib/payment-session";
 import { BillingPeriodToggle } from "@/components/payments/BillingPeriodToggle";
-import { PlanCard } from "@/components/payments/PlanCard";
-import { SpeedComparison } from "@/components/payments/SpeedComparison";
+import { RenewalPlanCard } from "@/components/payments/RenewalPlanCard";
 import { StickyPayBar } from "@/components/payments/StickyPayBar";
 import { Button } from "@/components/ui/Button";
-import { getPlanPrice } from "@/lib/renewal-plans";
 
 export function PlanSelection() {
   const router = useRouter();
-  const { subscription, setCheckout } = usePayment();
-  const [period, setPeriod] = useState<BillingPeriod>("monthly");
-  const [selectedId, setSelectedId] = useState(subscription.planId);
+  const { subscription, renewalQuote, setCheckout } = usePayment();
+  const [period, setPeriod] = useState<BillingCycle>(subscription.billingCycle);
 
-  const selectedPlan = renewalPlans.find((p) => p.id === selectedId)!;
-  const amount = getPlanPrice(selectedPlan, period);
+  const amount = calculateRenewalAmount(subscription, period);
 
   const handleContinue = () => {
     const draft = {
-      planId: selectedId,
       billingPeriod: period,
       methodId: "upi",
+      amount,
     };
     setCheckout(draft);
-    saveProcessingSession(draft);
+    saveProcessingSession({
+      planId: subscription.planCatalogId,
+      billingPeriod: period,
+      methodId: "upi",
+      amount,
+    });
     router.push("/dashboard/payments/checkout");
   };
 
   return (
     <>
       <div className="space-y-5 pb-28 lg:pb-5">
+        <div className="rounded-lg border border-border bg-surface px-4 py-3 text-[13px] text-muted sm:px-5">
+          Renewing extends your connection from{" "}
+          <span className="font-medium text-foreground">{subscription.expiryDate}</span>
+          . Amount shown is your{" "}
+          <span className="font-medium text-foreground">account-specific</span> billing
+          rate, not the public website price.
+        </div>
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[13px] text-muted">
-              Current plan expires{" "}
-              <span className="font-medium text-foreground">
-                {subscription.expiryDate}
-              </span>
-            </p>
-          </div>
           <BillingPeriodToggle value={period} onChange={setPeriod} />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          {renewalPlans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              period={period}
-              isCurrent={plan.id === subscription.planId}
-              isSelected={plan.id === selectedId}
-              onSelect={() => setSelectedId(plan.id)}
-            />
-          ))}
-        </div>
-
-        <SpeedComparison />
+        <RenewalPlanCard
+          quote={renewalQuote}
+          subscription={subscription}
+          period={period}
+        />
       </div>
 
       <StickyPayBar
-        label={`${selectedPlan.name} · ${period}`}
+        label={`${subscription.planName} · ${period}`}
         amount={`₹${amount.toLocaleString("en-IN")}`}
       >
         <div className="flex items-center justify-between gap-4 sm:justify-end">
           <div className="sm:hidden">
-            <p className="text-[12px] text-muted">Total</p>
+            <p className="text-[12px] text-muted">Your renewal total</p>
             <p className="text-lg font-semibold text-foreground">
               ₹{amount.toLocaleString("en-IN")}
             </p>
           </div>
-          <Button type="button" variant="primary" className="flex-1 sm:flex-none sm:px-8" onClick={handleContinue}>
+          <Button
+            type="button"
+            variant="primary"
+            className="flex-1 sm:flex-none sm:px-8"
+            onClick={handleContinue}
+          >
             Continue to payment
           </Button>
         </div>

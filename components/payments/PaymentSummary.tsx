@@ -8,7 +8,8 @@ import {
   saveProcessingSession,
   setSimulateFailFlag,
 } from "@/lib/payment-session";
-import { paymentMethods, getPeriodLabel } from "@/lib/renewal-plans";
+import { paymentMethods } from "@/lib/renewal-plans";
+import { getPeriodLabel } from "@/lib/billing/pricing-utils";
 import { StickyPayBar } from "@/components/payments/StickyPayBar";
 import { Button } from "@/components/ui/Button";
 
@@ -16,18 +17,17 @@ const GST_RATE = 0.18;
 
 export function PaymentSummary() {
   const router = useRouter();
-  const { checkout, setCheckout, getCheckoutPlan, getCheckoutAmount } = usePayment();
+  const { subscription, checkout, setCheckout, getCheckoutAmount } = usePayment();
   const [methodId, setMethodId] = useState(checkout?.methodId ?? "upi");
 
-  const plan = getCheckoutPlan();
   const subtotal = getCheckoutAmount();
 
-  if (!checkout || !plan) {
+  if (!checkout) {
     return (
       <div className="rounded-lg border border-border bg-white p-6 text-center">
-        <p className="text-[13px] text-muted">No plan selected.</p>
+        <p className="text-[13px] text-muted">No renewal session found.</p>
         <Button href="/dashboard/payments/renew" variant="primary" className="mt-4">
-          Select a plan
+          Start renewal
         </Button>
       </div>
     );
@@ -37,9 +37,14 @@ export function PaymentSummary() {
   const total = subtotal + gst;
 
   const goToProcessing = (simulateFail: boolean) => {
-    const draft = { ...checkout, methodId };
+    const draft = { ...checkout, methodId, amount: subtotal };
     setCheckout(draft);
-    saveProcessingSession(draft);
+    saveProcessingSession({
+      planId: subscription.planCatalogId,
+      billingPeriod: checkout.billingPeriod,
+      methodId,
+      amount: subtotal,
+    });
     setSimulateFailFlag(simulateFail);
     router.push("/dashboard/payments/processing");
   };
@@ -84,11 +89,8 @@ export function PaymentSummary() {
           </div>
 
           <p className="text-[12px] text-muted">
-            Demo payment — no real charge. By continuing you agree to Extranet{" "}
-            <Link href="#" className="text-telecom hover:underline">
-              terms of service
-            </Link>
-            .{" "}
+            Demo payment — no real charge. Amount reflects your negotiated account
+            rate, not public website pricing.{" "}
             <button
               type="button"
               onClick={handleTestFail}
@@ -106,11 +108,19 @@ export function PaymentSummary() {
             <div className="mt-4 space-y-3 border-b border-border pb-4 text-[13px]">
               <div className="flex justify-between">
                 <span className="text-muted">Plan</span>
-                <span className="font-medium text-foreground">{plan.name}</span>
+                <span className="font-medium text-foreground">
+                  {subscription.planName}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted">Speed</span>
-                <span className="font-medium text-telecom">{plan.speed}</span>
+                <span className="font-medium text-telecom">{subscription.speed}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Your rate</span>
+                <span className="font-medium text-foreground">
+                  Account-specific
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted">Duration</span>
@@ -145,7 +155,12 @@ export function PaymentSummary() {
           <Button href="/dashboard/payments/renew" variant="outline" className="flex-1 sm:flex-none">
             Back
           </Button>
-          <Button type="button" variant="primary" className="flex-1 sm:flex-none sm:min-w-[160px]" onClick={handlePay}>
+          <Button
+            type="button"
+            variant="primary"
+            className="flex-1 sm:flex-none sm:min-w-[160px]"
+            onClick={handlePay}
+          >
             Pay now
           </Button>
         </div>

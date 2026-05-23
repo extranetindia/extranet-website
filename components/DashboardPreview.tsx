@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 const highlights = [
   "Speed test and connection health",
   "One-click bill pay via UPI and cards",
-  "Plan renewal and upgrade controls",
+  "Plan renewal at your account rate",
 ] as const;
 
 export function DashboardPreview() {
@@ -57,11 +57,16 @@ export function DashboardPreview() {
                   <p className="text-[11px] text-slate-400">100 Mbps</p>
                 </div>
                 <div className="rounded-md border border-white/8 px-3 py-2.5">
-                  <p className="text-[11px] text-slate-500">Bill due</p>
-                  <p className="text-sm font-medium text-white">₹599</p>
+                  <p className="text-[11px] text-slate-500">Your renewal</p>
+                  <p className="text-sm font-medium text-white">₹499</p>
                   <p className="text-[11px] text-slate-400">28 May 2026</p>
                 </div>
               </div>
+
+              <p className="text-[10px] text-slate-500">
+                Same plan may show from ₹799 on the public site — your portal shows your
+                assigned rate.
+              </p>
 
               <div className="rounded-md border border-white/8 px-3 py-2.5">
                 <div className="flex justify-between text-[11px]">

@@ -5,7 +5,7 @@ export default function RenewPage() {
   return (
     <PageShell
       title="Renew your plan"
-      description="Select a broadband plan and billing period to recharge your Extranet connection."
+      description="Extend your connection at your account-specific billing rate — not the public website price."
     >
       <PlanSelection />
     </PageShell>

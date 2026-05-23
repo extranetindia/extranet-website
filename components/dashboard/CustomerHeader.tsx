@@ -1,7 +1,16 @@
-import { customer } from "@/lib/dashboard-data";
+"use client";
+
+import { usePayment } from "@/lib/payment-context";
+import { getCurrentCustomerProfile } from "@/lib/customers/customer-profile-service";
 
 export function CustomerHeader() {
-  const initials = customer.name
+  const { subscription } = usePayment();
+  const profile = getCurrentCustomerProfile();
+
+  const name = subscription.customerName || profile.name;
+  const accountId = subscription.accountId || profile.accountId;
+
+  const initials = name
     .split(" ")
     .map((n) => n[0])
     .join("");
@@ -16,12 +25,12 @@ export function CustomerHeader() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              {customer.name}
+              {name}
             </h1>
-            <p className="text-[13px] text-muted">Account {customer.accountId}</p>
+            <p className="text-[13px] text-muted">Account {accountId}</p>
           </div>
         </div>
-        <p className="text-[12px] text-muted sm:text-right">{customer.address}</p>
+        <p className="text-[12px] text-muted sm:text-right">{profile.address}</p>
       </div>
     </header>
   );
