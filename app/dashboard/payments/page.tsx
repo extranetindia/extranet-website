@@ -1,7 +1,7 @@
 import { PageShell } from "@/components/dashboard/PageShell";
 import { SubscriptionOverview } from "@/components/dashboard/SubscriptionOverview";
 import { PaymentHistoryInvoices } from "@/components/payments/PaymentHistoryInvoices";
-import Link from "next/link";
+import { RenewLink } from "@/components/payments/RenewLink";
 
 export default function PaymentsPage() {
   return (
@@ -14,12 +14,7 @@ export default function PaymentsPage() {
       <div className="mt-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-foreground">Transaction history</h2>
-          <Link
-            href="/dashboard/payments/renew"
-            className="text-[12px] font-medium text-telecom hover:text-telecom-dark"
-          >
-            New renewal →
-          </Link>
+          <RenewLink />
         </div>
         <PaymentHistoryInvoices />
       </div>

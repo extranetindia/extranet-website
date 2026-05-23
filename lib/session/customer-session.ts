@@ -1,3 +1,6 @@
+import { findCustomerByPhone } from "@/lib/admin/services/customer-admin-service";
+import { PORTAL_DEFAULT_CUSTOMER_ID } from "@/lib/portal/constants";
+
 const CUSTOMER_ID_KEY = "extranet-customer-id";
 
 export function setLoggedInCustomerId(customerId: string): void {
@@ -15,10 +18,11 @@ export function clearLoggedInCustomerId(): void {
   sessionStorage.removeItem(CUSTOMER_ID_KEY);
 }
 
-/** Demo: map mobile suffix to customer — replace with H8 auth later */
+/** Resolve customer from admin CRM by mobile */
 export function resolveCustomerIdFromPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.endsWith("43210")) return "cust-rahul";
-  if (digits.endsWith("98765")) return "cust-amit";
-  return "cust-rahul";
+  const found = findCustomerByPhone(phone);
+  if (found && !found.deletedAt) {
+    return found.customerId;
+  }
+  return PORTAL_DEFAULT_CUSTOMER_ID;
 }

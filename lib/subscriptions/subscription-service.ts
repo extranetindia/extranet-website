@@ -1,33 +1,52 @@
 /**
- * Customer subscription service — mock implementation.
- * Replace fetch calls with H8 API when backend is ready.
+ * Customer subscription service — admin CRM store is the single source of truth.
+ * Replace with H8 API when backend is ready.
  */
 
+import {
+  accountToSubscription,
+  findCustomerByPhone,
+  getAdminCustomerById,
+} from "@/lib/admin/services/customer-admin-service";
+import { seedAdminCustomers } from "@/lib/admin/seed/customers-seed";
 import { resolveCatalogPlanById } from "@/lib/catalog/catalog-service";
+import { PORTAL_DEFAULT_CUSTOMER_ID } from "@/lib/portal/constants";
 import type { BillingCycle, CustomerSubscription, RenewalQuote } from "@/lib/domain/subscription";
 import { getLoggedInCustomerId } from "@/lib/session/customer-session";
-import {
-  DEFAULT_CUSTOMER_ID,
-  mockSubscriptions,
-} from "@/lib/subscriptions/mock-data";
 
 export type { CustomerSubscription, RenewalQuote, BillingCycle };
 
+function getSeededSubscription(customerId: string): CustomerSubscription | undefined {
+  const account = seedAdminCustomers().find(
+    (c) => c.customerId === customerId && !c.deletedAt
+  );
+  return account ? accountToSubscription(account) : undefined;
+}
+
+/** Resolve subscription from admin store (includes suspended — not deleted) */
 export function getSubscriptionByCustomerId(
   customerId: string
 ): CustomerSubscription | undefined {
-  return mockSubscriptions.find((s) => s.customerId === customerId);
+  const account = getAdminCustomerById(customerId);
+  if (account && !account.deletedAt) {
+    return accountToSubscription(account);
+  }
+  return getSeededSubscription(customerId);
 }
 
-/** Primary portal entry — uses session customer or demo default */
+/** Primary portal entry — session customer, always from admin CRM data on client */
 export function getCurrentCustomerSubscription(): CustomerSubscription {
-  const sessionId = getLoggedInCustomerId();
-  const id = sessionId ?? DEFAULT_CUSTOMER_ID;
-  const sub = getSubscriptionByCustomerId(id);
-  if (!sub) {
-    return mockSubscriptions[0];
-  }
-  return sub;
+  const sessionId = getLoggedInCustomerId() ?? PORTAL_DEFAULT_CUSTOMER_ID;
+  const sub = getSubscriptionByCustomerId(sessionId);
+  if (sub) return sub;
+
+  const fallback = getSeededSubscription(PORTAL_DEFAULT_CUSTOMER_ID);
+  if (fallback) return fallback;
+
+  const first = seedAdminCustomers().find((c) => !c.deletedAt);
+  if (first) return accountToSubscription(first);
+
+  throw new Error("No customer subscription available");
 }
 
 export function getPublicStartingPrice(planCatalogId: string): number | undefined {
@@ -41,9 +60,7 @@ export function calculateRenewalAmount(
   if (cycle === "monthly") {
     return subscription.billingAmount;
   }
-  const monthly = subscription.billingAmount;
-  const quarterly = Math.round(monthly * 2.85);
-  return quarterly;
+  return Math.round(subscription.billingAmount * 2.85);
 }
 
 export function getRenewalQuote(
@@ -81,3 +98,5 @@ export function daysUntilExpiry(expiryDate: string): number {
   const now = new Date(2026, 4, 22);
   return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 }
+
+export { findCustomerByPhone };

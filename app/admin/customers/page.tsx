@@ -1,5 +1,5 @@
-import { CustomersOverview } from "@/components/admin/customers/CustomersOverview";
+import { CustomerManagement } from "@/components/admin/customers/CustomerManagement";
 
 export default function AdminCustomersPage() {
-  return <CustomersOverview />;
+  return <CustomerManagement />;
 }

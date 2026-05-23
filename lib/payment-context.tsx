@@ -11,8 +11,15 @@ import {
 } from "react";
 import type { BillingRecord, PaymentStatus } from "@/lib/domain/billing";
 import type { BillingCycle, CustomerSubscription } from "@/lib/domain/subscription";
+import { ADMIN_CUSTOMERS_STORAGE_KEY } from "@/lib/admin/storage-keys";
 import { addMonthsToDate, formatToday } from "@/lib/billing/pricing-utils";
 import { getCurrentCustomerBillingRecords } from "@/lib/billing/billing-service";
+import {
+  canRenewSubscription,
+  canManageConnection,
+  isSuspended,
+  isExpired,
+} from "@/lib/portal/portal-access";
 import {
   calculateRenewalAmount,
   daysUntilExpiry,
@@ -20,6 +27,7 @@ import {
   getRenewalQuote,
 } from "@/lib/subscriptions/subscription-service";
 import { resolveCatalogPlanById } from "@/lib/catalog/catalog-service";
+import { CUSTOMERS_DATA_UPDATED } from "@/lib/public/sync-events";
 
 export type { PaymentStatus };
 
@@ -33,7 +41,6 @@ export type SubscriptionState = CustomerSubscription & {
 type CheckoutDraft = {
   billingPeriod: BillingCycle;
   methodId: string;
-  /** Snapshot of amount at checkout — customer-specific */
   amount: number;
 };
 
@@ -54,17 +61,46 @@ function toSubscriptionState(sub: CustomerSubscription): SubscriptionState {
   };
 }
 
-function subscriptionToState(sub: CustomerSubscription): SubscriptionState {
-  return toSubscriptionState(sub);
+function loadAuthoritativeSubscription(): SubscriptionState {
+  return toSubscriptionState(getCurrentCustomerSubscription());
 }
 
-function parseStoredState(raw: string | null): PaymentState | null {
+type PersistedPaymentSlice = {
+  customerId: string;
+  transactions: Transaction[];
+  checkout: CheckoutDraft | null;
+};
+
+function parsePersistedSlice(raw: string | null): PersistedPaymentSlice | null {
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as PaymentState;
+    const parsed = JSON.parse(raw) as PaymentState;
+    return {
+      customerId: parsed.subscription?.customerId ?? "",
+      transactions: parsed.transactions ?? [],
+      checkout: parsed.checkout ?? null,
+    };
   } catch {
     return null;
   }
+}
+
+function buildStateFromAdmin(persisted: PersistedPaymentSlice | null): PaymentState {
+  const subscription = loadAuthoritativeSubscription();
+  const billing = getCurrentCustomerBillingRecords() as Transaction[];
+
+  const sameCustomer = persisted?.customerId === subscription.customerId;
+
+  return {
+    subscription,
+    transactions:
+      billing.length > 0
+        ? billing
+        : sameCustomer
+          ? persisted!.transactions
+          : billing,
+    checkout: sameCustomer ? persisted?.checkout ?? null : null,
+  };
 }
 
 function generateTxnId(): string {
@@ -81,6 +117,10 @@ type PaymentContextValue = {
   checkout: CheckoutDraft | null;
   latestTransaction: Transaction | null;
   renewalQuote: ReturnType<typeof getRenewalQuote>;
+  canRenew: boolean;
+  canManageConnection: boolean;
+  isSuspended: boolean;
+  isExpired: boolean;
   setCheckout: (draft: CheckoutDraft) => void;
   clearCheckout: () => void;
   completePayment: (success: boolean) => {
@@ -92,48 +132,27 @@ type PaymentContextValue = {
     speed: string;
   } | null;
   getCheckoutAmount: () => number;
-  refreshSubscription: () => void;
+  refreshFromAdmin: () => void;
 };
 
 const PaymentContext = createContext<PaymentContextValue | null>(null);
 
 export function PaymentProvider({ children }: { children: ReactNode }) {
-  const loadInitial = () => {
-    const sub = getCurrentCustomerSubscription();
-    const billing = getCurrentCustomerBillingRecords();
-    return {
-      subscription: subscriptionToState(sub),
-      transactions: billing as Transaction[],
-      checkout: null,
-    };
-  };
-
-  const [state, setState] = useState<PaymentState>(loadInitial);
+  const [state, setState] = useState<PaymentState>(() =>
+    buildStateFromAdmin(null)
+  );
   const [hydrated, setHydrated] = useState(false);
 
-  const refreshSubscription = useCallback(() => {
-    const sub = getCurrentCustomerSubscription();
-    setState((prev) => ({
-      ...prev,
-      subscription: subscriptionToState(sub),
-      transactions: getCurrentCustomerBillingRecords() as Transaction[],
-    }));
+  const refreshFromAdmin = useCallback(() => {
+    const persisted = parsePersistedSlice(
+      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null
+    );
+    setState(buildStateFromAdmin(persisted));
   }, []);
 
   useEffect(() => {
-    const stored = parseStoredState(localStorage.getItem(STORAGE_KEY));
-    const freshSub = subscriptionToState(getCurrentCustomerSubscription());
-    if (stored?.subscription.customerId === freshSub.customerId) {
-      setState({
-        ...stored,
-        subscription: {
-          ...stored.subscription,
-          daysRemaining: daysUntilExpiry(stored.subscription.expiryDate),
-        },
-      });
-    } else {
-      setState(loadInitial());
-    }
+    const persisted = parsePersistedSlice(localStorage.getItem(STORAGE_KEY));
+    setState(buildStateFromAdmin(persisted));
     setHydrated(true);
   }, []);
 
@@ -142,13 +161,45 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const onCustomersUpdated = () => refreshFromAdmin();
+
+    const onStorage = (e: StorageEvent) => {
+      if (
+        e.key === ADMIN_CUSTOMERS_STORAGE_KEY ||
+        e.key === STORAGE_KEY ||
+        e.key === null
+      ) {
+        refreshFromAdmin();
+      }
+    };
+
+    window.addEventListener(CUSTOMERS_DATA_UPDATED, onCustomersUpdated);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(CUSTOMERS_DATA_UPDATED, onCustomersUpdated);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [hydrated, refreshFromAdmin]);
+
   const renewalQuote = useMemo(
     () => getRenewalQuote(state.subscription, state.subscription.billingCycle),
     [state.subscription]
   );
 
+  const canRenew = canRenewSubscription(state.subscription);
+  const canManage = canManageConnection(state.subscription);
+  const suspended = isSuspended(state.subscription.status);
+  const expired = isExpired(state.subscription.status);
+
   const setCheckout = useCallback((draft: CheckoutDraft) => {
-    setState((prev) => ({ ...prev, checkout: draft }));
+    setState((prev) => {
+      const sub = loadAuthoritativeSubscription();
+      if (!canRenewSubscription(sub)) return prev;
+      return { ...prev, checkout: draft };
+    });
   }, []);
 
   const clearCheckout = useCallback(() => {
@@ -156,14 +207,15 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getCheckoutAmount = useCallback(() => {
+    const sub = loadAuthoritativeSubscription();
     if (state.checkout) return state.checkout.amount;
-    return calculateRenewalAmount(
-      state.subscription,
-      state.subscription.billingCycle
-    );
-  }, [state.checkout, state.subscription]);
+    return calculateRenewalAmount(sub, sub.billingCycle);
+  }, [state.checkout]);
 
   const completePayment = useCallback((success: boolean) => {
+    const liveSub = loadAuthoritativeSubscription();
+    if (!canRenewSubscription(liveSub)) return null;
+
     let result: {
       txnId: string;
       newExpiry: string;
@@ -177,7 +229,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       const checkout = prev.checkout;
       if (!checkout) return prev;
 
-      const sub = prev.subscription;
+      const sub = loadAuthoritativeSubscription();
       const amount = checkout.amount;
       const method =
         checkout.methodId === "upi"
@@ -214,6 +266,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         };
         return {
           ...prev,
+          subscription: sub,
           transactions: [failedTxn, ...prev.transactions],
         };
       }
@@ -271,21 +324,29 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       checkout: state.checkout,
       latestTransaction,
       renewalQuote,
+      canRenew,
+      canManageConnection: canManage,
+      isSuspended: suspended,
+      isExpired: expired,
       setCheckout,
       clearCheckout,
       completePayment,
       getCheckoutAmount,
-      refreshSubscription,
+      refreshFromAdmin,
     }),
     [
       state,
       latestTransaction,
       renewalQuote,
+      canRenew,
+      canManage,
+      suspended,
+      expired,
       setCheckout,
       clearCheckout,
       completePayment,
       getCheckoutAmount,
-      refreshSubscription,
+      refreshFromAdmin,
     ]
   );
 

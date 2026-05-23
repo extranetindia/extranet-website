@@ -51,3 +51,5 @@ export const mockSubscriptions: CustomerSubscription[] = [
 ];
 
 export const DEFAULT_CUSTOMER_ID = "cust-rahul";
+
+/** @deprecated Portal reads from admin CRM — seed data only */

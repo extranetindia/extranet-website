@@ -4,9 +4,20 @@ import { usePayment } from "@/lib/payment-context";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 
 export function NotificationsSection() {
-  const { subscription } = usePayment();
+  const { subscription, isSuspended } = usePayment();
 
-  const notifications = [
+  const notifications = isSuspended
+    ? [
+        {
+          id: "suspended",
+          title: "Account suspended",
+          message:
+            "Your connection is suspended. Contact support to reactivate your account before renewing or changing settings.",
+          time: "Just now",
+          unread: true,
+        },
+      ]
+    : [
     {
       id: "1",
       title: "Bill due soon",

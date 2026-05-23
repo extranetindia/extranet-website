@@ -19,39 +19,53 @@ import {
   type AdminCatalogPlanInput,
   type PlanCatalogStatus,
 } from "@/lib/admin/services/catalog-admin-service";
-import { dispatchPublicContentUpdate } from "@/lib/public/sync-events";
 import {
-  getPricingOverrides,
-  saveOverridesToStorage,
-  type CustomerPricingOverride,
-} from "@/lib/admin/services/pricing-override-service";
+  createAdminCustomer,
+  getAllAdminCustomersRaw,
+  loadCustomersFromStorage,
+  saveCustomersToStorage,
+  setCustomerStatus,
+  softDeleteCustomer,
+  updateAdminCustomer,
+  type AdminCustomerAccount,
+  type AdminCustomerFormInput,
+} from "@/lib/admin/services/customer-admin-service";
+import { seedAdminCustomers } from "@/lib/admin/seed/customers-seed";
+import { dispatchPublicContentUpdate } from "@/lib/public/sync-events";
+import type { SubscriptionStatus } from "@/lib/domain/subscription";
 
 type AdminContextValue = {
   plans: AdminCatalogPlan[];
-  pricingOverrides: CustomerPricingOverride[];
+  customers: AdminCustomerAccount[];
+  activeCustomers: AdminCustomerAccount[];
   hydrated: boolean;
   createPlan: (input: AdminCatalogPlanInput) => void;
   updatePlan: (id: string, patch: Partial<AdminCatalogPlanInput>) => void;
   togglePlanStatus: (id: string) => void;
-  refreshCatalog: () => void;
+  createCustomer: (input: AdminCustomerFormInput) => void;
+  updateCustomer: (customerId: string, input: AdminCustomerFormInput) => void;
+  suspendCustomer: (customerId: string) => void;
+  reactivateCustomer: (customerId: string) => void;
+  deleteCustomer: (customerId: string) => void;
+  refreshAll: () => void;
 };
 
 const AdminContext = createContext<AdminContextValue | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<AdminCatalogPlan[]>([]);
-  const [pricingOverrides, setPricingOverrides] = useState<CustomerPricingOverride[]>([]);
+  const [customers, setCustomers] = useState<AdminCustomerAccount[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  const refreshCatalog = useCallback(() => {
+  const refreshAll = useCallback(() => {
     setPlans(getAdminCatalog());
-    setPricingOverrides(getPricingOverrides());
+    setCustomers(loadCustomersFromStorage() ?? seedAdminCustomers());
   }, []);
 
   useEffect(() => {
-    refreshCatalog();
+    refreshAll();
     setHydrated(true);
-  }, [refreshCatalog]);
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -61,8 +75,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    saveOverridesToStorage(pricingOverrides);
-  }, [pricingOverrides, hydrated]);
+    saveCustomersToStorage(customers);
+  }, [customers, hydrated]);
+
+  const activeCustomers = useMemo(
+    () => customers.filter((c) => !c.deletedAt),
+    [customers]
+  );
 
   const createPlan = useCallback((input: AdminCatalogPlanInput) => {
     setPlans((prev) => {
@@ -88,24 +107,72 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const createCustomer = useCallback((input: AdminCustomerFormInput) => {
+    setCustomers((prev) => {
+      const all = prev.length ? prev : getAllAdminCustomersRaw();
+      const created = createAdminCustomer(input, all);
+      return [...all, created];
+    });
+  }, []);
+
+  const updateCustomer = useCallback(
+    (customerId: string, input: AdminCustomerFormInput) => {
+      setCustomers((prev) => updateAdminCustomer(customerId, input, prev));
+    },
+    []
+  );
+
+  const setStatus = useCallback(
+    (customerId: string, status: SubscriptionStatus) => {
+      setCustomers((prev) => setCustomerStatus(customerId, status, prev));
+    },
+    []
+  );
+
+  const suspendCustomer = useCallback(
+    (customerId: string) => setStatus(customerId, "suspended"),
+    [setStatus]
+  );
+
+  const reactivateCustomer = useCallback(
+    (customerId: string) => setStatus(customerId, "active"),
+    [setStatus]
+  );
+
+  const deleteCustomer = useCallback((customerId: string) => {
+    setCustomers((prev) => softDeleteCustomer(customerId, prev));
+  }, []);
+
   const value = useMemo(
     () => ({
       plans,
-      pricingOverrides,
+      customers,
+      activeCustomers,
       hydrated,
       createPlan,
       updatePlan,
       togglePlanStatus,
-      refreshCatalog,
+      createCustomer,
+      updateCustomer,
+      suspendCustomer,
+      reactivateCustomer,
+      deleteCustomer,
+      refreshAll,
     }),
     [
       plans,
-      pricingOverrides,
+      customers,
+      activeCustomers,
       hydrated,
       createPlan,
       updatePlan,
       togglePlanStatus,
-      refreshCatalog,
+      createCustomer,
+      updateCustomer,
+      suspendCustomer,
+      reactivateCustomer,
+      deleteCustomer,
+      refreshAll,
     ]
   );
 

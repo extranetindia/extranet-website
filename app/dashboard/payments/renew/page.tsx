@@ -1,5 +1,6 @@
 import { PageShell } from "@/components/dashboard/PageShell";
 import { PlanSelection } from "@/components/payments/PlanSelection";
+import { RenewalGuard } from "@/components/payments/RenewalGuard";
 
 export default function RenewPage() {
   return (
@@ -7,7 +8,9 @@ export default function RenewPage() {
       title="Renew your plan"
       description="Extend your connection at your account-specific billing rate — not the public website price."
     >
-      <PlanSelection />
+      <RenewalGuard>
+        <PlanSelection />
+      </RenewalGuard>
     </PageShell>
   );
 }
