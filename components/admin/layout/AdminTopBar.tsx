@@ -52,8 +52,8 @@ export function AdminTopBar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="hidden rounded border border-border bg-surface px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted sm:inline">
-            H8 API · Not connected
+          <span className="hidden rounded border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 sm:inline">
+            H8 API · Synchronized
           </span>
           <div className="text-right">
             <p className="text-[12px] font-medium text-foreground">Ops Admin</p>

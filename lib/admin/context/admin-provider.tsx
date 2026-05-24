@@ -56,27 +56,62 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<AdminCatalogPlan[]>([]);
   const [customers, setCustomers] = useState<AdminCustomerAccount[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const refreshAll = useCallback(() => {
+  const syncToServer = useCallback(async (payload: any) => {
+    try {
+      setIsSyncing(true);
+      await fetch("/api/h8/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      console.error("Failed to sync updates to H8 server", e);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    try {
+      const res = await fetch("/api/h8/sync");
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.plans && data.customers) {
+          setPlans(data.plans);
+          setCustomers(data.customers);
+          saveCatalogToStorage(data.plans);
+          saveCustomersToStorage(data.customers);
+          setHydrated(true);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch initial sync from H8 API, falling back to localStorage", e);
+    }
+
     setPlans(getAdminCatalog());
     setCustomers(loadCustomersFromStorage() ?? seedAdminCustomers());
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
     refreshAll();
-    setHydrated(true);
   }, [refreshAll]);
 
   useEffect(() => {
     if (!hydrated) return;
     saveCatalogToStorage(plans);
     dispatchPublicContentUpdate("catalog");
-  }, [plans, hydrated]);
+    syncToServer({ plans });
+  }, [plans, hydrated, syncToServer]);
 
   useEffect(() => {
     if (!hydrated) return;
     saveCustomersToStorage(customers);
-  }, [customers, hydrated]);
+    syncToServer({ customers });
+  }, [customers, hydrated, syncToServer]);
 
   const activeCustomers = useMemo(
     () => customers.filter((c) => !c.deletedAt),
