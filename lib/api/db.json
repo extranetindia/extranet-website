@@ -12,17 +12,17 @@
       "planName": "Home Stream",
       "speed": "100 Mbps",
       "publicCatalogPrice": 799,
-      "overrideAmount": null,
-      "billingAmount": 799,
+      "overrideAmount": 2499,
+      "billingAmount": 2499,
       "billingCycle": "monthly",
       "startDate": "24 May 2026",
-      "expiryDate": "26 Aug 2026",
+      "expiryDate": "25 Sep 2026",
       "status": "active",
       "autoRenew": true,
       "billingNote": "Legacy promotional rate · Grandfathered pricing",
       "deletedAt": null,
       "createdAt": "Mar 2023",
-      "updatedAt": "24 May 2026"
+      "updatedAt": "25 May 2026"
     },
     {
       "customerId": "cust-amit",
@@ -76,10 +76,10 @@
     {
       "id": "home-starter",
       "category": "home",
-      "name": "Home",
+      "name": "HOME",
       "speed": "50 Mbps",
       "speedMbps": 50,
-      "startingPrice": 1499,
+      "startingPrice": 2999,
       "description": "Ideal for light browsing, online classes, and HD streaming on 2–3 devices.",
       "features": [
         "Unlimited fair usage",
@@ -205,6 +205,19 @@
     }
   ],
   "billing": [
+    {
+      "id": "INV-2026-9860",
+      "customerId": "cust-rahul",
+      "txnId": "TXN17796384735809860",
+      "invoiceId": "INV-2026-9860",
+      "date": "24 May 2026",
+      "amount": 499,
+      "status": "Paid",
+      "method": "Google Pay",
+      "planName": "Home Stream",
+      "speed": "100 Mbps",
+      "billingCycle": "monthly"
+    },
     {
       "id": "INV-2026-6268",
       "customerId": "cust-rahul",
